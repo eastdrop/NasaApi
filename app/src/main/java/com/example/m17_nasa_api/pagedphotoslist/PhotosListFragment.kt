@@ -9,6 +9,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.paging.LoadState
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.m17_nasa_api.R
 import com.example.m17_nasa_api.databinding.FragmentPhotosPagedListBinding
 import com.example.m17_nasa_api.models.PhotoResponse
@@ -45,6 +46,10 @@ class PhotosListFragment : Fragment() {
             pagedAdapter.submitData(it)
         }.launchIn(viewLifecycleOwner.lifecycleScope)
 
+        binding.recycler.apply {
+            layoutManager = LinearLayoutManager(context)
+            adapter = pagedAdapter
+        }
     }
 
     private fun onItemClick(item: PhotoResponse) {

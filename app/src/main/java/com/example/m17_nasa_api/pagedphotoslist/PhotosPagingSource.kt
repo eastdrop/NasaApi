@@ -10,15 +10,14 @@ import java.time.ZoneId
 import java.util.Calendar
 import java.util.Date
 
-class PhotosPagingSource : PagingSource<Date, PhotoResponse>() {
+class PhotosPagingSource : PagingSource<Int, PhotoResponse>() {
 
     private val repository = PhotosListRepository()
 
     @RequiresApi(Build.VERSION_CODES.O)
-    val localDate: LocalDate = LocalDate.of(2023, 1, 7)
-    @RequiresApi(Build.VERSION_CODES.O)
-    val userDate: Date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant())
-    override fun getRefreshKey(state: PagingState<Date, PhotoResponse>): Date? {
+    val startingSol = 4060
+
+    override fun getRefreshKey(state: PagingState<Int, PhotoResponse>): Int? {
         return state.anchorPosition?.let { anchorPosition ->
             state.closestPageToPosition(anchorPosition)?.prevKey ?: state.closestPageToPosition(
                 anchorPosition
@@ -27,41 +26,24 @@ class PhotosPagingSource : PagingSource<Date, PhotoResponse>() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    override suspend fun load(params: LoadParams<Date>): LoadResult<Date, PhotoResponse> {
+    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, PhotoResponse> {
         // Получаем текущую дату для загрузки данных. Если null, используем введенную пользователем.
-        val currentDate = params.key ?: userDate
+        val currentSol = params.key ?: startingSol
 
         return kotlin.runCatching {
 
             // Запрашиваем фотографии для даты, введенной пользователем
-            val response = repository.getPhotosList(currentDate)
+            val response = repository.getPhotosList(currentSol)
             val photos = response.photos
-
-            // Определяем следующую и предыдущую даты
-            val nextDate = if (photos.isNotEmpty()) getNextDate(currentDate) else null
-            val prevDate = if (currentDate != userDate) getPreviousDate(currentDate) else null
-
+            if (photos.isEmpty()) throw Exception("No photos found for SOL $currentSol")
             LoadResult.Page(
-                data = photos, prevKey = prevDate, nextKey = nextDate
+                data = photos,
+                prevKey = if (currentSol > 0) currentSol - 1 else null,
+                nextKey = if (photos.isNotEmpty()) currentSol + 1 else null
             )
         }.fold(
-            onSuccess = { result -> result },
-            onFailure = { exception -> LoadResult.Error(exception) }
+            onSuccess = { it },
+            onFailure = { LoadResult.Error(it) }
         )
     }
-
-    private fun getNextDate(currentDate: Date): Date {
-        val calendar = Calendar.getInstance()
-        calendar.time = currentDate
-        calendar.add(Calendar.DAY_OF_MONTH, 1)
-        return calendar.time
-    }
-
-    private fun getPreviousDate(currentDate: Date): Date {
-        val calendar = Calendar.getInstance()
-        calendar.time = currentDate
-        calendar.add(Calendar.DAY_OF_MONTH, -1)
-        return calendar.time
-    }
 }
-

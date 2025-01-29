@@ -9,10 +9,8 @@ import java.util.Date
 import java.util.Locale
 
 class PhotosListRepository {
-    suspend fun getPhotosList(date: Date): PagedPhotosList{
-        val dateFormat = SimpleDateFormat("YYYY-MM-dd", Locale.US)
-        val formattedDate = dateFormat.format(date)
+    suspend fun getPhotosList(sol: Int): PagedPhotosList{
         delay(2000)
-        return retrofit.photosList(formattedDate)
+        return retrofit.photosList(sol)
     }
 }

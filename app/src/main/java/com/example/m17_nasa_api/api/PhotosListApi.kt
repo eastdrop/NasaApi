@@ -11,10 +11,10 @@ import retrofit2.http.Query
 import java.util.Date
 
 interface PhotosListApi {
-    @GET("/api/v1/rovers/curiosity/photos")
+    @GET("rovers/curiosity/photos")
     suspend fun photosList(
-        @Query("earth_date") earth_date: String,
-        @Query("api-key") api_key: String = "LmdY1YaroejIZJaJ191AgvqT17s9hnXtWSsNfeR8"
+        @Query("sol") sol: Int,
+        @Query("api_key") api_key: String = "LmdY1YaroejIZJaJ191AgvqT17s9hnXtWSsNfeR8"
     ): PagedPhotosList
 }
 
@@ -25,7 +25,7 @@ val retrofit = Retrofit
             it.level = HttpLoggingInterceptor.Level.BODY
         }).build()
     )
-    .baseUrl("https://api.nasa.gov/mars-photos")
+    .baseUrl("https://api.nasa.gov/mars-photos/api/v1/")
     .addConverterFactory(GsonConverterFactory.create())
     .build()
     .create(PhotosListApi::class.java)
